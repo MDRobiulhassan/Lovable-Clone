@@ -1,7 +1,5 @@
 package com.lovable.lovable_clone.controller;
 
-import com.lovable.lovable_clone.dto.subscription.PlanLimitResponse;
-import com.lovable.lovable_clone.dto.subscription.UsageTodayResponse;
 import com.lovable.lovable_clone.service.UsageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -17,13 +15,13 @@ public class UsageController {
     private final UsageService usageService;
 
     @GetMapping("/today")
-    public ResponseEntity<?> getTodayUsage(){
+    public ResponseEntity<?> getTodayUsage() {
         Long userId = 1L;
         return ResponseEntity.ok(usageService.getTodayUsage(userId));
     }
 
     @GetMapping("/limits")
-    public ResponseEntity<?> getPlanLimits(){
+    public ResponseEntity<?> getPlanLimits() {
         Long userId = 1L;
         return ResponseEntity.ok(usageService.getCurrentSubscriptionLimitOfUser(userId));
     }

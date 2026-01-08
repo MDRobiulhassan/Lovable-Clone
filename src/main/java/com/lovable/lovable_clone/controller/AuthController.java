@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
-@FieldDefaults(makeFinal = true,level = AccessLevel.PRIVATE)
+@FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
 public class AuthController {
     AuthService authService;
     UserService userService;
@@ -24,14 +24,14 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody LoginRequest request){
+    public ResponseEntity<?> login(@RequestBody LoginRequest request) {
         return ResponseEntity.ok(authService.login(request));
     }
 
 
     @GetMapping("/me")
-    public ResponseEntity<?> getProfile(){
-        Long userId=1L;
+    public ResponseEntity<?> getProfile() {
+        Long userId = 1L;
         return ResponseEntity.ok(userService.getProfile(userId));
     }
 }

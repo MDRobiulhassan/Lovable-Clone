@@ -7,7 +7,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
-@Service
 public interface ProjectService {
     List<ProjectSummaryResponse> getUserProjects(Long userId);
 
