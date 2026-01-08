@@ -9,7 +9,7 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.lovable</groupId>
-	<artifactId>lovable-clone</artifactId>
+	<artifactId>Lovable-Clone</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>lovable-clone</name>
 	<description>Lovable Clone</description>

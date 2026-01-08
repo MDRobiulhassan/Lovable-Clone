@@ -6,8 +6,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api")
@@ -16,24 +14,24 @@ public class BillingController {
     private final BillingService billingService;
 
     @GetMapping("/plans")
-    public ResponseEntity<List<PlanResponse>> getAllPlans(){
+    public ResponseEntity<?> getAllPlans(){
         return ResponseEntity.ok(billingService.getAllActivePlans());
     }
 
     @GetMapping("/me/subscription")
-    public ResponseEntity<SubscriptionReponse> getMySubscription(){
+    public ResponseEntity<?> getMySubscription(){
         Long userId = 1L;
         return ResponseEntity.ok(billingService.getMySubscription(userId));
     }
 
     @PostMapping("/stripe/checkout")
-    public ResponseEntity<CheckoutResponse> createCheckoutResponse(@RequestBody CheckoutRequest request){
+    public ResponseEntity<?> createCheckoutResponse(@RequestBody CheckoutRequest request){
         Long userId = 1L;
         return ResponseEntity.ok(billingService.createCheckoutSessionUrl(userId,request));
     }
 
     @PostMapping("/stripe/portal")
-    public ResponseEntity<PortalResponse> openCustomerPortal(){
+    public ResponseEntity<?> openCustomerPortal(){
         Long userId = 1L;
         return ResponseEntity.ok(billingService.openCustomerPortal(userId));
     }
