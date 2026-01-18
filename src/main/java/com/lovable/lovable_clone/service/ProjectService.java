@@ -3,7 +3,6 @@ package com.lovable.lovable_clone.service;
 import com.lovable.lovable_clone.dto.project.ProjectRequest;
 import com.lovable.lovable_clone.dto.project.ProjectResponse;
 import com.lovable.lovable_clone.dto.project.ProjectSummaryResponse;
-import org.springframework.stereotype.Service;
 
 import java.util.List;
 
@@ -16,5 +15,5 @@ public interface ProjectService {
 
     ProjectResponse updateProject(ProjectRequest request, Long userId, Long id);
 
-    Void softDelete(Long id, Long userId);
+    void softDelete(Long id, Long userId);
 }

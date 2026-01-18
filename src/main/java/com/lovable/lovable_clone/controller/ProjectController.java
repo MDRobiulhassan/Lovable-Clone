@@ -39,10 +39,11 @@ public class ProjectController {
         return ResponseEntity.ok(projectService.updateProject(request, userId, id));
     }
 
-    @DeleteMapping
+    @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteProject(@PathVariable Long id) {
         Long userId = 1L;
-        ResponseEntity.ok(projectService.softDelete(id, userId));
+        projectService.softDelete(id, userId);
         return ResponseEntity.noContent().build();
     }
+
 }

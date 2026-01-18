@@ -11,4 +11,5 @@ import java.util.List;
 public interface ProjectMapper {
     ProjectResponse toProjectResponse(Project project);
     List<ProjectSummaryResponse> toProjectSummaryResponse(List<Project> projects);
+
 }
