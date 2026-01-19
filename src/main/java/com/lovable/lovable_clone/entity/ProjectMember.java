@@ -34,10 +34,12 @@ public class ProjectMember {
     @Column(nullable = false)
     ProjectRole projectRole;
 
-    @ManyToOne
-    @JoinColumn(name = "invited_by")
-    User invitedBy;
+//    @ManyToOne
+//    @JoinColumn(name = "invited_by")
+//    User invitedBy;
 
     @Column(nullable = false, updatable = false)
     Instant invitedAt;
+
+    Instant acceptedAt;
 }
