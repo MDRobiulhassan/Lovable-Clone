@@ -2,6 +2,7 @@ package com.lovable.lovable_clone.controller;
 
 import com.lovable.lovable_clone.dto.subscription.CheckoutRequest;
 import com.lovable.lovable_clone.service.BillingService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -25,7 +26,7 @@ public class BillingController {
     }
 
     @PostMapping("/stripe/checkout")
-    public ResponseEntity<?> createCheckoutResponse(@RequestBody CheckoutRequest request) {
+    public ResponseEntity<?> createCheckoutResponse(@Valid @RequestBody CheckoutRequest request) {
         Long userId = 1L;
         return ResponseEntity.ok(billingService.createCheckoutSessionUrl(userId, request));
     }
