@@ -7,12 +7,15 @@ import com.lovable.lovable_clone.entity.User;
 import com.lovable.lovable_clone.error.BadRequestException;
 import com.lovable.lovable_clone.mapper.UserMapper;
 import com.lovable.lovable_clone.repository.UserRepository;
+import com.lovable.lovable_clone.security.AuthUtil;
 import com.lovable.lovable_clone.service.AuthService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -25,6 +28,8 @@ public class AuthServiceImpl implements AuthService {
     UserRepository userRepository;
     UserMapper userMapper;
     PasswordEncoder passwordEncoder;
+    AuthUtil authUtil;
+    AuthenticationManager authenticationManager;
 
     @Override
     public AuthResponse signup(SignupRequest request) {
@@ -33,14 +38,22 @@ public class AuthServiceImpl implements AuthService {
         });
 
         User user = userMapper.toEntity(request);
-        user.setPasswordHash(passwordEncoder.encode(request.password()));
+        user.setPassword(passwordEncoder.encode(request.password()));
         userRepository.save(user);
 
-        return new AuthResponse("dummy-token", userMapper.toUserProfileResponse(user));
+        String token = authUtil.generateAccessToken(user);
+        return new AuthResponse(token, userMapper.toUserProfileResponse(user));
     }
 
     @Override
     public AuthResponse login(LoginRequest request) {
-        return null;
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(request.username(), request.password())
+        );
+
+        User user = (User) authentication.getPrincipal();
+        assert user != null;
+        String token = authUtil.generateAccessToken(user);
+        return new AuthResponse(token, userMapper.toUserProfileResponse(user));
     }
 }
