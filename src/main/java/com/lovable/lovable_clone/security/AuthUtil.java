@@ -1,6 +1,7 @@
 package com.lovable.lovable_clone.security;
 
 import com.lovable.lovable_clone.entity.User;
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
@@ -8,12 +9,13 @@ import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Date;
 
 @Component
 public class AuthUtil {
 
-    @Value("{${jwt.secret-key}}")
+    @Value("${jwt.secret-key}")
     private String jwtSecretKey;
 
     @Value("${jwt.expiration}")
@@ -28,8 +30,20 @@ public class AuthUtil {
                 .subject(user.getUsername())
                 .claim("userId", user.getId())
                 .issuedAt(new Date())
-                .expiration(new Date(System.currentTimeMillis()+expiration))
+                .expiration(new Date(System.currentTimeMillis() + expiration))
                 .signWith(getSecretKey())
                 .compact();
+    }
+
+    public JwtUserPrinciple verifyAccessToken(String token) {
+        Claims claims = Jwts.parser()
+                .verifyWith(getSecretKey())
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
+
+        Long userId = ((Integer) claims.get("userId")).longValue();
+        String username = claims.getSubject();
+        return new JwtUserPrinciple(userId, username, new ArrayList<>());
     }
 }
