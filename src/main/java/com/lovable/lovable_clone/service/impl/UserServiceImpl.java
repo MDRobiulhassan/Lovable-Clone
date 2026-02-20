@@ -2,6 +2,7 @@ package com.lovable.lovable_clone.service.impl;
 
 import com.lovable.lovable_clone.dto.auth.UserProfileResponse;
 import com.lovable.lovable_clone.repository.UserRepository;
+import com.lovable.lovable_clone.security.AuthUtil;
 import com.lovable.lovable_clone.service.UserService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -19,9 +20,11 @@ import org.springframework.stereotype.Service;
 public class UserServiceImpl implements UserService, UserDetailsService {
 
     UserRepository userRepository;
+    AuthUtil authUtil;
 
     @Override
-    public UserProfileResponse getProfile(Long userId) {
+    public UserProfileResponse getProfile() {
+        Long userId = authUtil.getCurrentUserId();
         return null;
     }
 
