@@ -3,6 +3,7 @@ package com.lovable.lovable_clone.error;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -16,14 +17,14 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BadRequestException.class)
     public ResponseEntity<?> handleBadRequestException(BadRequestException ex) {
         ApiError apiError = new ApiError(HttpStatus.BAD_REQUEST, ex.getMessage());
-        log.error(apiError.toString(),ex);
+        log.error(apiError.toString(), ex);
         return ResponseEntity.status(apiError.status()).body(apiError);
     }
 
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<?> handleResourceNotFoundException(ResourceNotFoundException ex) {
         ApiError apiError = new ApiError(HttpStatus.NOT_FOUND, ex.getMessage());
-        log.error(apiError.toString(),ex.getResourceName() + " with id " + ex.getResourceId() + " not found");
+        log.error(apiError.toString(), ex.getResourceName() + " with id " + ex.getResourceId() + " not found");
         return ResponseEntity.status(apiError.status()).body(apiError);
     }
 
@@ -48,7 +49,18 @@ public class GlobalExceptionHandler {
                 "Input validation failed",
                 errors
         );
-        log.error(apiError.toString(),ex);
+        log.error(apiError.toString(), ex);
+        return ResponseEntity.status(apiError.status()).body(apiError);
+    }
+
+
+    @ExceptionHandler(AuthorizationDeniedException.class)
+    public ResponseEntity<?> handleAuthorizationDeniedException(AuthorizationDeniedException ex) {
+        ApiError apiError = new ApiError(
+                HttpStatus.FORBIDDEN,
+                "Access Denied: You do not have permission to perform this action"
+        );
+        log.error("Authorization error", ex);
         return ResponseEntity.status(apiError.status()).body(apiError);
     }
 }

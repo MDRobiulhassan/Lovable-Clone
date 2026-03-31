@@ -1,7 +1,5 @@
 package com.lovable.lovable_clone.dto.project;
 
-import com.lovable.lovable_clone.dto.auth.UserProfileResponse;
-
 import java.time.Instant;
 
 public record ProjectResponse(
