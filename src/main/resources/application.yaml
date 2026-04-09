@@ -19,3 +19,11 @@ spring:
 jwt:
   secret-key: ${JWT_SECRET}
   expiration: 86400000
+
+stripe:
+  api:
+    secret-key: ${STRIPE_SECRET_KEY}
+  webhook:
+    secret-key: ${STRIPE_WEBHOOK_SECRET_KEY}
+
+client.url : http://localhost:8080

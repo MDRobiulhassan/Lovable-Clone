@@ -31,7 +31,7 @@ public class Plan {
     Integer maxTokensPerDay;
 
     @Column(nullable = false)
-    Integer maxPrevious;
+    Integer maxPreviews;
 
     @Column(nullable = false)
     Boolean unlimitedAi;
