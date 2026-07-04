@@ -35,13 +35,11 @@ public class Subscription {
     String stripeSubscriptionId;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
     SubscriptionStatus status;
 
-    @Column(nullable = false)
     Instant currentPeriodStart;
 
-    Boolean currentPeriodEnd;
+    Instant currentPeriodEnd;
 
     @CreationTimestamp
     Instant createdAt;
