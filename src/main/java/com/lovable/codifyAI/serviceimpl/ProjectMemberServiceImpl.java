@@ -36,7 +36,7 @@ public class ProjectMemberServiceImpl implements ProjectMemberService {
     ProjectMemberMapper projectMemberMapper;
     UserRepository userRepository;
     AuthUtil authUtil;
-    private final SecurityExpressions security;
+    SecurityExpressions security;
 
     @Override
     @PreAuthorize("@security.canViewMembers(#projectId)")

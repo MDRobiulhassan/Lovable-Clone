@@ -9,11 +9,14 @@ import com.lovable.codifyAI.enums.SubscriptionStatus;
 import com.lovable.codifyAI.error.ResourceNotFoundException;
 import com.lovable.codifyAI.mapper.SubscriptionMapper;
 import com.lovable.codifyAI.repository.PlanRepository;
+import com.lovable.codifyAI.repository.ProjectMemberRepository;
 import com.lovable.codifyAI.repository.SubscriptionRepository;
 import com.lovable.codifyAI.repository.UserRepository;
 import com.lovable.codifyAI.security.AuthUtil;
 import com.lovable.codifyAI.service.SubscriptionService;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -22,6 +25,7 @@ import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class SubscriptionServiceImpl implements SubscriptionService {
 
     private final AuthUtil authUtil;
@@ -29,6 +33,8 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     private final SubscriptionMapper subscriptionMapper;
     private final UserRepository userRepository;
     private final PlanRepository planRepository;
+    private final ProjectMemberRepository projectMemberRepository;
+    private final Integer FREE_TIER_PROJECT_ALLOWED = 1;
 
     @Override
     public List<PlanResponse> getAllActivePlans() {
@@ -44,30 +50,11 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         return subscriptionMapper.toSubscriptionResponse(currentSubscription);
     }
 
-//    @Override
-//    public void activateSubscription(Long userId, Long planId, String subscriptionId) {
-//        boolean exists = subscriptionRepository.existsByStripeSubscriptionId(subscriptionId);
-//        if (exists) return;
-//
-//        User user = getUser(userId);
-//        Plan plan = getPlan(planId);
-//
-//        Subscription subscription = Subscription.builder()
-//                .user(user)
-//                .plan(plan)
-//                .stripeSubscriptionId(subscriptionId)
-//                .status(SubscriptionStatus.INCOMPLETE)
-//                .build();
-//        subscriptionRepository.save(subscription);
-//    }
-
     @Override
-    public void activateSubscription(Long userId, Long planId, String subscriptionId, SubscriptionStatus status, Instant periodStart, Instant periodEnd) {
-
+    public void activateSubscription(Long userId, Long planId, String subscriptionId,
+                                     SubscriptionStatus status, Instant periodStart, Instant periodEnd) {
         boolean exists = subscriptionRepository.existsByStripeSubscriptionId(subscriptionId);
-        if (exists) {
-            return;
-        }
+        if (exists) return;
 
         User user = getUser(userId);
         Plan plan = getPlan(planId);
@@ -76,22 +63,57 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                 .user(user)
                 .plan(plan)
                 .stripeSubscriptionId(subscriptionId)
-                .status(status)
+                .status(status != null ? status : SubscriptionStatus.INCOMPLETE)
                 .currentPeriodStart(periodStart)
                 .currentPeriodEnd(periodEnd)
                 .build();
-
         subscriptionRepository.save(subscription);
     }
 
     @Override
-    public void updateSubscription(String subscriptionId, SubscriptionStatus status, Instant periodStart, Instant periodEnd, Boolean cancelAtPeriodEnd, Long planId) {
+    @Transactional
+    public void updateSubscription(String gatewaySubscriptionId, SubscriptionStatus status, Instant periodStart, Instant periodEnd, Boolean cancelAtPeriodEnd, Long planId) {
+        Subscription subscription = getSubscription(gatewaySubscriptionId);
 
+        boolean hasSubscriptionUpdate = false;
+
+        if (status != null && status != subscription.getStatus()) {
+            subscription.setStatus(status);
+            hasSubscriptionUpdate = true;
+        }
+
+        if (periodStart != null && !periodStart.equals(subscription.getCurrentPeriodStart())) {
+            subscription.setCurrentPeriodStart(periodStart);
+            hasSubscriptionUpdate = true;
+        }
+
+        if (periodEnd != null && !periodEnd.equals(subscription.getCurrentPeriodEnd())) {
+            subscription.setCurrentPeriodEnd(periodEnd);
+            hasSubscriptionUpdate = true;
+        }
+
+        if (cancelAtPeriodEnd != null && cancelAtPeriodEnd != subscription.getCancelAtPeriodEnd()) {
+            subscription.setCancelAtPeriodEnd(cancelAtPeriodEnd);
+            hasSubscriptionUpdate = true;
+        }
+
+        if (planId != null && !planId.equals(subscription.getPlan().getId())) {
+            Plan plan = getPlan(planId);
+            subscription.setPlan(plan);
+            hasSubscriptionUpdate = true;
+        }
+
+        if (hasSubscriptionUpdate) {
+            log.debug("Subscription {} updated successfully", gatewaySubscriptionId);
+            subscriptionRepository.save(subscription);
+        }
     }
 
     @Override
-    public void cancelSubscription(String subscriptionId) {
-
+    public void cancelSubscription(String gatewaySubscriptionId) {
+        Subscription subscription = getSubscription(gatewaySubscriptionId);
+        subscription.setStatus(SubscriptionStatus.CANCELED);
+        subscriptionRepository.save(subscription);
     }
 
     @Override
@@ -109,10 +131,31 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         subscriptionRepository.save(subscription);
     }
 
-
     @Override
     public void markSubscriptionPastDue(String gatewaySubscriptionId) {
+        Subscription subscription = getSubscription(gatewaySubscriptionId);
 
+        if (subscription.getStatus() == SubscriptionStatus.PAST_DUE) {
+            log.debug("Subscription {} is already marked as PAST_DUE", gatewaySubscriptionId);
+            return;
+        }
+
+        subscription.setStatus(SubscriptionStatus.PAST_DUE);
+        subscriptionRepository.save(subscription);
+    }
+
+    @Override
+    public boolean CanCreateNewProject() {
+        Long userId = authUtil.getCurrentUserId();
+        SubscriptionReponse currentSubscription = getMySubscription();
+
+        int countOfOwnedProjects = projectMemberRepository.countProjectOwnedByUser(userId);
+
+        if (currentSubscription.plan() == null) {
+            return countOfOwnedProjects < FREE_TIER_PROJECT_ALLOWED;
+        }
+
+        return countOfOwnedProjects < currentSubscription.plan().maxProjects();
     }
 
     private User getUser(Long userId) {

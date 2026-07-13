@@ -8,6 +8,7 @@ import com.lovable.codifyAI.entity.ProjectMember;
 import com.lovable.codifyAI.entity.ProjectMemberId;
 import com.lovable.codifyAI.entity.User;
 import com.lovable.codifyAI.enums.ProjectRole;
+import com.lovable.codifyAI.error.BadRequestException;
 import com.lovable.codifyAI.error.ResourceNotFoundException;
 import com.lovable.codifyAI.mapper.ProjectMapper;
 import com.lovable.codifyAI.repository.ProjectMemberRepository;
@@ -15,6 +16,7 @@ import com.lovable.codifyAI.repository.ProjectRepository;
 import com.lovable.codifyAI.repository.UserRepository;
 import com.lovable.codifyAI.security.AuthUtil;
 import com.lovable.codifyAI.service.ProjectService;
+import com.lovable.codifyAI.service.SubscriptionService;
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -36,6 +38,7 @@ public class ProjectServiceImpl implements ProjectService {
     ProjectMapper projectMapper;
     ProjectMemberRepository projectMemberRepository;
     AuthUtil authUtil;
+    SubscriptionService subscriptionService;
 
     @Override
     public List<ProjectSummaryResponse> getUserProjects() {
@@ -54,6 +57,11 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Override
     public ProjectResponse createProject(ProjectRequest request) {
+
+        if(!subscriptionService.CanCreateNewProject()){
+            throw new BadRequestException("You have reached the maximum number of projects allowed for your subscription plan. Please upgrade your plan to create more projects.");
+        }
+
         Long userId = authUtil.getCurrentUserId();
 //        User owner = userRepository.findById(userId).orElseThrow(() -> new ResourceNotFoundException("User", userId.toString()));
 

@@ -41,6 +41,8 @@ public class Subscription {
 
     Instant currentPeriodEnd;
 
+    Boolean cancelAtPeriodEnd = false;
+
     @CreationTimestamp
     Instant createdAt;
 

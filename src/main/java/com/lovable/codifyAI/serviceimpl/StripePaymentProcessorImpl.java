@@ -6,6 +6,7 @@ import com.lovable.codifyAI.dto.subscription.PortalResponse;
 import com.lovable.codifyAI.entity.Plan;
 import com.lovable.codifyAI.entity.User;
 import com.lovable.codifyAI.enums.SubscriptionStatus;
+import com.lovable.codifyAI.error.BadRequestException;
 import com.lovable.codifyAI.error.ResourceNotFoundException;
 import com.lovable.codifyAI.repository.PlanRepository;
 import com.lovable.codifyAI.repository.UserRepository;
@@ -84,7 +85,26 @@ public class StripePaymentProcessorImpl implements StripePaymentProcessor {
 
     @Override
     public PortalResponse openCustomerPortal() {
-        return null;
+        Long userId = authUtil.getCurrentUserId();
+        User user = getUser(userId);
+        String stripeCustomerId = user.getStripeCustomerId();
+
+        if (stripeCustomerId == null || stripeCustomerId.isEmpty()) {
+            throw new BadRequestException("User does not have a Stripe customer ID. Cannot open customer portal.");
+        }
+
+        try {
+            var portalSession = com.stripe.model.billingportal.Session.create(
+                    com.stripe.param.billingportal.SessionCreateParams.builder()
+                            .setCustomer(stripeCustomerId)
+                            .setReturnUrl(frontendUrl)
+                            .build()
+            );
+
+            return new PortalResponse(portalSession.getUrl());
+        } catch (StripeException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
@@ -101,30 +121,7 @@ public class StripePaymentProcessorImpl implements StripePaymentProcessor {
         }
     }
 
-//    private void handleCheckoutSessionCompleted(Session session, Map<String, String> metaData) {
-//
-//        if (session == null) {
-//            log.error("Stripe session is null");
-//            return;
-//        }
-//
-//        Long userId = Long.parseLong(metaData.get("user_id"));
-//        Long planId = Long.parseLong(metaData.get("plan_id"));
-//
-//        String subscriptionId = session.getSubscription();
-//        String customerId = session.getCustomer();
-//
-//        User user = getUser(userId);
-//        if (user.getStripeCustomerId() == null) {
-//            user.setStripeCustomerId(customerId);
-//            userRepository.save(user);
-//        }
-//
-//        subscriptionService.activateSubscription(userId, planId, subscriptionId);
-//    }
-
     private void handleCheckoutSessionCompleted(Session session, Map<String, String> metaData) {
-
         if (session == null) {
             log.error("Stripe session is null");
             return;
@@ -144,27 +141,13 @@ public class StripePaymentProcessorImpl implements StripePaymentProcessor {
 
         try {
             Subscription stripeSubscription = Subscription.retrieve(subscriptionId);
-
             SubscriptionItem item = stripeSubscription.getItems().getData().get(0);
 
             SubscriptionStatus status = mapStripeStatusToEnum(stripeSubscription.getStatus());
-
             Instant periodStart = toInstant(item.getCurrentPeriodStart());
             Instant periodEnd = toInstant(item.getCurrentPeriodEnd());
 
-            log.info("Stripe Subscription JSON:\n{}", stripeSubscription.toJson());
-            log.info("Period Start: {}", periodStart);
-            log.info("Period End: {}", periodEnd);
-
-            subscriptionService.activateSubscription(
-                    userId,
-                    planId,
-                    subscriptionId,
-                    status,
-                    periodStart,
-                    periodEnd
-            );
-
+            subscriptionService.activateSubscription(userId, planId, subscriptionId, status, periodStart, periodEnd);
         } catch (StripeException e) {
             throw new RuntimeException(e);
         }
@@ -201,7 +184,7 @@ public class StripePaymentProcessorImpl implements StripePaymentProcessor {
     }
 
     private void handleInvoicePaid(Invoice invoice) {
-        String subId=extractSubscriptionId(invoice);
+        String subId = extractSubscriptionId(invoice);
         if (subId == null) return;
 
         try {
@@ -218,8 +201,8 @@ public class StripePaymentProcessorImpl implements StripePaymentProcessor {
     }
 
     private void handleInvoicePaymentFailed(Invoice invoice) {
-        String subId=extractSubscriptionId(invoice);
-        if(subId == null) return;
+        String subId = extractSubscriptionId(invoice);
+        if (subId == null) return;
 
         subscriptionService.markSubscriptionPastDue(subId);
     }
