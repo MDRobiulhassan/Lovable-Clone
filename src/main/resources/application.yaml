@@ -16,6 +16,15 @@ spring:
         format_sql: true
         dialect: org.hibernate.dialect.PostgreSQLDialect
 
+  ai:
+    openai:
+      api-key: ${OPENAI_API_KEY}
+      base-url: https://openrouter.ai/api
+      chat:
+        options:
+          model: nvidia/nemotron-3-ultra-550b-a55b:free
+          temperature: 0.0
+
 jwt:
   secret-key: ${JWT_SECRET}
   expiration: 86400000

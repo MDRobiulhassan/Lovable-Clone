@@ -20,6 +20,7 @@ public class ChatSession {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    Long id;
 
     @ManyToOne
     @JoinColumn(name = "project_id", nullable = false)
