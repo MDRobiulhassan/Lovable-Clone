@@ -18,8 +18,8 @@ spring:
 
   ai:
     openai:
-      api-key: ${OPENAI_API_KEY}
-      base-url: https://openrouter.ai/api
+      api-key: ${OPENAI_API_KEY:}
+      base-url: https://openrouter.ai/api/v1
       chat:
         options:
           model: nvidia/nemotron-3-ultra-550b-a55b:free
@@ -41,3 +41,16 @@ client:
 server:
   port: ${PORT:8080}
   forward-headers-strategy: framework
+
+Logging:
+  level:
+    org.springframework.ai:
+      chat.client : DEBUG
+
+minio:
+  url: ${MINIO_URL}
+  access-key: ${MINIO_ACCESS_KEY}
+  secret-key:  ${MINIO_SECRET_KEY}
+  project-bucket: ${MINIO_PROJECT_BUCKET}
+
+

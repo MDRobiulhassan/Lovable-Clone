@@ -1,6 +1,6 @@
 package com.lovable.codifyAI.controller;
 
-import com.lovable.codifyAI.service.FileService;
+import com.lovable.codifyAI.service.ProjectFileService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -13,19 +13,19 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/projects/{projectId}/files")
 public class FileController {
 
-    private final FileService fileService;
+    private final ProjectFileService projectFileService;
 
     @GetMapping
     public ResponseEntity<?> getFileTree(@PathVariable Long projectId) {
         Long userId = 1L;
-        return ResponseEntity.ok(fileService.getFileTree(projectId, userId));
+        return ResponseEntity.ok(projectFileService.getFileTree(projectId, userId));
     }
 
     @GetMapping("/{path}")
     public ResponseEntity<?> getFile(
             @PathVariable Long projectId, String path) {
         Long userId = 1L;
-        return ResponseEntity.ok(fileService.getFileContent(projectId, userId, path));
+        return ResponseEntity.ok(projectFileService.getFileContent(projectId, userId, path));
     }
 
 }

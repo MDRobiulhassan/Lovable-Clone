@@ -22,24 +22,14 @@ public class ProjectFile {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
 
-    @ManyToOne
+    @ManyToOne(fetch =  FetchType.LAZY)
     @JoinColumn(name = "project_id", nullable = false)
     Project project;
 
     @Column(nullable = false)
     String path;
 
-    @Column(nullable = false, unique = true)
     String minioObjectKey;
-
-
-    @ManyToOne
-    @JoinColumn(name = "created_by", nullable = false)
-    User createdBy;
-
-    @ManyToOne
-    @JoinColumn(name = "updated_by")
-    User updatedBy;
 
     @CreationTimestamp
     Instant createdAt;
